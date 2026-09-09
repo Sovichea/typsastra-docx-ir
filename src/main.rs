@@ -1,13 +1,13 @@
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
-use typsastra_docx_ir::{DocumentLayout, FORMAT};
+use typsastra_docx_ir::{DocumentLayout, Region, json_schema};
 
 #[derive(Parser)]
 #[command(
     name = "typsastra-docx-ir",
     version,
-    about = "Inspect Typsastra DOCX Layout IR"
+    about = "Inspect and validate Typsastra DOCX Layout IR"
 )]
 struct Cli {
     #[command(subcommand)]
@@ -18,31 +18,36 @@ struct Cli {
 enum Command {
     /// Print a compact summary of an existing IR document.
     Summary { input: PathBuf },
+    /// Validate JSON shape and semantic layout invariants.
+    Validate { input: PathBuf },
+    /// Print the v1 JSON Schema or write it to a file.
+    Schema {
+        #[arg(short, long)]
+        output: Option<PathBuf>,
+    },
+}
+
+fn read_document(input: &PathBuf) -> Result<DocumentLayout, Box<dyn std::error::Error>> {
+    let bytes = std::fs::read(input)?;
+    Ok(serde_json::from_slice(&bytes)?)
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
     match cli.command {
         Command::Summary { input } => {
-            let bytes = std::fs::read(&input)?;
-            let document: DocumentLayout = serde_json::from_slice(&bytes)?;
-            if !document.is_supported() {
-                return Err(format!(
-                    "unsupported format: {} {} (expected {FORMAT} 1.x)",
-                    document.format, document.version
-                )
-                .into());
-            }
+            let document = read_document(&input)?;
+            document.validate()?;
             let regions: usize = document.pages.iter().map(|page| page.regions.len()).sum();
             let overflows = document
                 .pages
                 .iter()
                 .flat_map(|page| &page.regions)
                 .filter(|region| match region {
-                    typsastra_docx_ir::Region::Paragraph(paragraph) => paragraph
+                    Region::Paragraph(paragraph) => paragraph
                         .overflow
                         .is_some_and(|value| value.horizontal || value.vertical),
-                    typsastra_docx_ir::Region::Image(_) => false,
+                    Region::Image(_) => false,
                 })
                 .count();
             println!("format: {} {}", document.format, document.version);
@@ -50,6 +55,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("pages: {}", document.pages.len());
             println!("regions: {regions}");
             println!("overflows: {overflows}");
+        }
+        Command::Validate { input } => {
+            let document = read_document(&input)?;
+            document.validate()?;
+            println!("valid: {} {}", document.format, document.version);
+        }
+        Command::Schema { output } => {
+            let json = serde_json::to_vec_pretty(&json_schema())?;
+            if let Some(output) = output {
+                std::fs::write(&output, &json)?;
+                println!("wrote {}", output.display());
+            } else {
+                println!("{}", String::from_utf8(json)?);
+            }
         }
     }
     Ok(())

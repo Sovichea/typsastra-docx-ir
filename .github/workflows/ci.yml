@@ -19,3 +19,6 @@ jobs:
       - run: cargo fmt --all -- --check
       - run: cargo clippy --all-targets -- -D warnings
       - run: cargo test --all-targets
+      - run: cargo run -- schema --output schema/typsastra-docx-ir-v1.schema.json
+      - run: git diff --exit-code -- schema/typsastra-docx-ir-v1.schema.json
+      - run: cargo run -- validate examples/minimal.docx-ir.json

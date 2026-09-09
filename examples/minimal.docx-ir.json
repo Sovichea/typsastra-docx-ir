@@ -1,0 +1,65 @@
+{
+  "format": "typsastra-docx-ir",
+  "version": "1.0",
+  "generator": {
+    "name": "example",
+    "version": "0.1.0"
+  },
+  "source": {
+    "path": "minimal.docx",
+    "byte_length": 1024
+  },
+  "pages": [
+    {
+      "index": 0,
+      "number": 1,
+      "size_pt": {
+        "width": 612.0,
+        "height": 792.0
+      },
+      "content_bbox_pt": {
+        "x": 72.0,
+        "y": 72.0,
+        "width": 468.0,
+        "height": 648.0
+      },
+      "regions": [
+        {
+          "kind": "paragraph",
+          "source": {
+            "part": "word/document.xml",
+            "id": "2A4B6C8D",
+            "identity": "para_id"
+          },
+          "segment": 0,
+          "segment_count": 1,
+          "text": "Hello, layout.",
+          "frame_bbox_pt": {
+            "x": 72.0,
+            "y": 72.0,
+            "width": 468.0,
+            "height": 14.0
+          },
+          "content_bbox_pt": {
+            "x": 72.0,
+            "y": 72.0,
+            "width": 78.0,
+            "height": 14.0
+          },
+          "lines": [
+            {
+              "range_utf8": [0, 14],
+              "bbox_pt": {
+                "x": 72.0,
+                "y": 72.0,
+                "width": 78.0,
+                "height": 14.0
+              }
+            }
+          ],
+          "overflow": null
+        }
+      ]
+    }
+  ]
+}

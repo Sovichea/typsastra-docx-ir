@@ -1,0 +1,391 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DocumentLayout",
+  "type": "object",
+  "properties": {
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Diagnostic"
+      }
+    },
+    "format": {
+      "type": "string"
+    },
+    "generator": {
+      "$ref": "#/$defs/GeneratorInfo"
+    },
+    "pages": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/PageLayout"
+      }
+    },
+    "source": {
+      "$ref": "#/$defs/SourceInfo"
+    },
+    "version": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "format",
+    "version",
+    "generator",
+    "source",
+    "pages"
+  ],
+  "$defs": {
+    "Diagnostic": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "severity": {
+          "$ref": "#/$defs/Severity"
+        },
+        "source_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "severity",
+        "code",
+        "message"
+      ]
+    },
+    "GeneratorInfo": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version"
+      ]
+    },
+    "IdentityKind": {
+      "type": "string",
+      "enum": [
+        "para_id",
+        "relationship_id",
+        "generated_path"
+      ]
+    },
+    "ImagePlacement": {
+      "type": "string",
+      "enum": [
+        "inline",
+        "floating"
+      ]
+    },
+    "ImageRegion": {
+      "type": "object",
+      "properties": {
+        "bbox_pt": {
+          "$ref": "#/$defs/Rect"
+        },
+        "owner_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "placement": {
+          "$ref": "#/$defs/ImagePlacement"
+        },
+        "source": {
+          "$ref": "#/$defs/SourceRef"
+        }
+      },
+      "required": [
+        "source",
+        "bbox_pt",
+        "placement"
+      ]
+    },
+    "LineLayout": {
+      "type": "object",
+      "properties": {
+        "bbox_pt": {
+          "$ref": "#/$defs/Rect"
+        },
+        "range_utf8": {
+          "description": "Half-open UTF-8 byte range into `ParagraphRegion::text`.",
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "uint",
+            "minimum": 0
+          },
+          "maxItems": 2,
+          "minItems": 2
+        }
+      },
+      "required": [
+        "range_utf8",
+        "bbox_pt"
+      ]
+    },
+    "Overflow": {
+      "type": "object",
+      "properties": {
+        "clipped": {
+          "type": "boolean"
+        },
+        "horizontal": {
+          "type": "boolean"
+        },
+        "past_content_area_pt": {
+          "type": "number",
+          "format": "float"
+        },
+        "vertical": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "horizontal",
+        "vertical",
+        "clipped",
+        "past_content_area_pt"
+      ]
+    },
+    "PageLayout": {
+      "type": "object",
+      "properties": {
+        "content_bbox_pt": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Rect"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "index": {
+          "description": "Zero-based physical page index.",
+          "type": "integer",
+          "format": "uint",
+          "minimum": 0
+        },
+        "number": {
+          "description": "Logical page number, if the document defines one.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "regions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Region"
+          }
+        },
+        "size_pt": {
+          "$ref": "#/$defs/Size"
+        }
+      },
+      "required": [
+        "index",
+        "size_pt"
+      ]
+    },
+    "ParagraphRegion": {
+      "type": "object",
+      "properties": {
+        "content_bbox_pt": {
+          "description": "Union of visible line and inline-object boxes.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Rect"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "frame_bbox_pt": {
+          "description": "Allocated flow box, including paragraph spacing.",
+          "$ref": "#/$defs/Rect"
+        },
+        "lines": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LineLayout"
+          }
+        },
+        "overflow": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Overflow"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "segment": {
+          "description": "Zero-based page-segment index for a paragraph split across pages.",
+          "type": "integer",
+          "format": "uint",
+          "minimum": 0
+        },
+        "segment_count": {
+          "type": "integer",
+          "format": "uint",
+          "minimum": 0
+        },
+        "source": {
+          "$ref": "#/$defs/SourceRef"
+        },
+        "text": {
+          "description": "Logical paragraph text stored once for all fitted lines.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "segment",
+        "segment_count",
+        "text",
+        "frame_bbox_pt"
+      ]
+    },
+    "Rect": {
+      "type": "object",
+      "properties": {
+        "height": {
+          "type": "number",
+          "format": "float"
+        },
+        "width": {
+          "type": "number",
+          "format": "float"
+        },
+        "x": {
+          "type": "number",
+          "format": "float"
+        },
+        "y": {
+          "type": "number",
+          "format": "float"
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "width",
+        "height"
+      ]
+    },
+    "Region": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "paragraph"
+            }
+          },
+          "$ref": "#/$defs/ParagraphRegion",
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "image"
+            }
+          },
+          "$ref": "#/$defs/ImageRegion",
+          "required": [
+            "kind"
+          ]
+        }
+      ]
+    },
+    "Severity": {
+      "type": "string",
+      "enum": [
+        "info",
+        "warning",
+        "error"
+      ]
+    },
+    "Size": {
+      "type": "object",
+      "properties": {
+        "height": {
+          "type": "number",
+          "format": "float"
+        },
+        "width": {
+          "type": "number",
+          "format": "float"
+        }
+      },
+      "required": [
+        "width",
+        "height"
+      ]
+    },
+    "SourceInfo": {
+      "type": "object",
+      "properties": {
+        "byte_length": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "path": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "byte_length"
+      ]
+    },
+    "SourceRef": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "Identity within `part`.",
+          "type": "string"
+        },
+        "identity": {
+          "$ref": "#/$defs/IdentityKind"
+        },
+        "part": {
+          "description": "OPC part containing the editable source node.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "part",
+        "id",
+        "identity"
+      ]
+    }
+  }
+}
