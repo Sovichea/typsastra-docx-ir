@@ -1,6 +1,6 @@
 use std::fmt;
 
-use crate::{DocumentLayout, ParagraphRegion, Rect, Region, SourceRef};
+use crate::{DocumentLayout, LayoutEnvironment, ParagraphRegion, Rect, Region, SourceRef};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ValidationError {
@@ -28,19 +28,17 @@ impl std::error::Error for ValidationErrors {}
 pub fn validate(document: &DocumentLayout) -> Result<(), ValidationErrors> {
     let mut errors = Vec::new();
 
-    if !document.is_supported() {
-        errors.push(error(
-            "$",
-            format!(
-                "unsupported format {} {} (expected {} 1.x)",
-                document.format,
-                document.version,
-                crate::FORMAT
-            ),
-        ));
+    if let Err(compatibility_error) = document.compatibility() {
+        errors.push(error("$", compatibility_error.to_string()));
     }
     if document.generator.name.trim().is_empty() {
         errors.push(error("generator.name", "must not be empty"));
+    }
+    if document.generator.version.trim().is_empty() {
+        errors.push(error("generator.version", "must not be empty"));
+    }
+    if let Some(environment) = &document.layout_environment {
+        validate_layout_environment(&mut errors, environment);
     }
     if document.source.path.trim().is_empty() {
         errors.push(error("source.path", "must not be empty"));
@@ -86,6 +84,91 @@ pub fn validate(document: &DocumentLayout) -> Result<(), ValidationErrors> {
         Ok(())
     } else {
         Err(ValidationErrors(errors))
+    }
+}
+
+fn validate_layout_environment(errors: &mut Vec<ValidationError>, environment: &LayoutEnvironment) {
+    validate_nonempty(
+        errors,
+        "layout_environment.engine.name",
+        &environment.engine.name,
+    );
+    validate_nonempty(
+        errors,
+        "layout_environment.engine.version",
+        &environment.engine.version,
+    );
+    validate_nonempty(
+        errors,
+        "layout_environment.platform.os",
+        &environment.platform.os,
+    );
+    validate_nonempty(
+        errors,
+        "layout_environment.platform.architecture",
+        &environment.platform.architecture,
+    );
+    validate_optional_nonempty(
+        errors,
+        "layout_environment.platform.version",
+        environment.platform.version.as_deref(),
+    );
+
+    for (index, font) in environment.fonts.iter().enumerate() {
+        let path = format!("layout_environment.fonts[{index}]");
+        validate_nonempty(errors, format!("{path}.family"), &font.family);
+        validate_optional_nonempty(
+            errors,
+            format!("{path}.postscript_name"),
+            font.postscript_name.as_deref(),
+        );
+        validate_optional_nonempty(errors, format!("{path}.version"), font.version.as_deref());
+        if let Some(hash) = &font.file_sha256
+            && (hash.len() != 64
+                || !hash
+                    .bytes()
+                    .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte)))
+        {
+            errors.push(error(
+                format!("{path}.file_sha256"),
+                "must be 64 lowercase hexadecimal characters",
+            ));
+        }
+    }
+
+    for (index, substitution) in environment.font_substitutions.iter().enumerate() {
+        let path = format!("layout_environment.font_substitutions[{index}]");
+        validate_nonempty(
+            errors,
+            format!("{path}.requested_family"),
+            &substitution.requested_family,
+        );
+        validate_nonempty(
+            errors,
+            format!("{path}.resolved_family"),
+            &substitution.resolved_family,
+        );
+        validate_optional_nonempty(
+            errors,
+            format!("{path}.resolved_postscript_name"),
+            substitution.resolved_postscript_name.as_deref(),
+        );
+    }
+}
+
+fn validate_nonempty(errors: &mut Vec<ValidationError>, path: impl Into<String>, value: &str) {
+    if value.trim().is_empty() {
+        errors.push(error(path, "must not be empty"));
+    }
+}
+
+fn validate_optional_nonempty(
+    errors: &mut Vec<ValidationError>,
+    path: impl Into<String>,
+    value: Option<&str>,
+) {
+    if value.is_some_and(|value| value.trim().is_empty()) {
+        errors.push(error(path, "must not be empty when present"));
     }
 }
 
@@ -193,8 +276,8 @@ fn error(path: impl Into<String>, message: impl Into<String>) -> ValidationError
 #[cfg(test)]
 mod tests {
     use crate::{
-        DocumentLayout, GeneratorInfo, IdentityKind, LineLayout, PageLayout, ParagraphRegion, Size,
-        SourceInfo, SourceRef,
+        DocumentLayout, FontInfo, GeneratorInfo, IdentityKind, LayoutEngineInfo, LayoutEnvironment,
+        LineLayout, PageLayout, ParagraphRegion, PlatformInfo, Size, SourceInfo, SourceRef,
     };
 
     use super::*;
@@ -274,5 +357,36 @@ mod tests {
         paragraph.frame_bbox_pt.width = -1.0;
         let errors = document_with(paragraph).validate().unwrap_err();
         assert!(errors.to_string().contains("width: must be non-negative"));
+    }
+
+    #[test]
+    fn validates_layout_environment_metadata() {
+        let mut document = document_with(paragraph("text", [0, 4]));
+        document.layout_environment = Some(LayoutEnvironment {
+            engine: LayoutEngineInfo {
+                name: "engine".into(),
+                version: "1".into(),
+            },
+            platform: PlatformInfo {
+                os: "windows".into(),
+                architecture: "x86_64".into(),
+                version: None,
+            },
+            fonts: vec![FontInfo {
+                family: "Aptos".into(),
+                postscript_name: None,
+                version: None,
+                file_sha256: Some("ABC".into()),
+                face_index: None,
+            }],
+            font_substitutions: Vec::new(),
+        });
+
+        let errors = document.validate().unwrap_err();
+        assert!(
+            errors
+                .to_string()
+                .contains("layout_environment.fonts[0].file_sha256")
+        );
     }
 }

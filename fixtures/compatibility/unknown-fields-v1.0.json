@@ -1,0 +1,69 @@
+{
+  "format": "typsastra-docx-ir",
+  "version": "1.0",
+  "generator": {
+    "name": "compatibility-test",
+    "version": "1",
+    "future_generator_field": true
+  },
+  "layout_environment": {
+    "engine": {
+      "name": "test-engine",
+      "version": "1",
+      "future_engine_field": "ignored"
+    },
+    "platform": {
+      "os": "test-os",
+      "architecture": "test-arch",
+      "future_platform_field": [1, 2, 3]
+    },
+    "future_environment_field": {"nested": [{"value": true}]}
+  },
+  "source": {
+    "path": "unknown-fields.docx",
+    "byte_length": 1,
+    "future_source_field": null
+  },
+  "pages": [
+    {
+      "index": 0,
+      "number": 1,
+      "size_pt": {
+        "width": 612.0,
+        "height": 792.0,
+        "future_size_field": 1
+      },
+      "content_bbox_pt": null,
+      "regions": [
+        {
+          "kind": "paragraph",
+          "source": {
+            "part": "word/document.xml",
+            "id": "A1B2C3D4",
+            "identity": "para_id",
+            "future_source_ref_field": "ignored"
+          },
+          "segment": 0,
+          "segment_count": 1,
+          "text": "forward compatible",
+          "frame_bbox_pt": {
+            "x": 72.0,
+            "y": 72.0,
+            "width": 468.0,
+            "height": 14.0,
+            "future_rect_field": false
+          },
+          "content_bbox_pt": null,
+          "lines": [],
+          "overflow": null,
+          "future_region_field": {"ignored": true}
+        }
+      ],
+      "future_page_field": "ignored"
+    }
+  ],
+  "diagnostics": [],
+  "future_document_field": {
+    "unknown_fields_may_be_nested": [[[[true]]]]
+  }
+}

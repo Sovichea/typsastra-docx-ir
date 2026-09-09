@@ -5,6 +5,31 @@
     "name": "example",
     "version": "0.1.0"
   },
+  "layout_environment": {
+    "engine": {
+      "name": "example-layout-engine",
+      "version": "1.0"
+    },
+    "platform": {
+      "os": "windows",
+      "architecture": "x86_64",
+      "version": "11"
+    },
+    "fonts": [
+      {
+        "family": "Aptos",
+        "postscript_name": "Aptos",
+        "version": "1.00"
+      }
+    ],
+    "font_substitutions": [
+      {
+        "requested_family": "Calibri",
+        "resolved_family": "Aptos",
+        "resolved_postscript_name": "Aptos"
+      }
+    ]
+  },
   "source": {
     "path": "minimal.docx",
     "byte_length": 1024

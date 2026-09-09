@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
-use typsastra_docx_ir::{DocumentLayout, Region, json_schema};
+use typsastra_docx_ir::{ProcessingLimits, Region, json_schema, read_document};
 
 #[derive(Parser)]
 #[command(
@@ -27,16 +27,11 @@ enum Command {
     },
 }
 
-fn read_document(input: &PathBuf) -> Result<DocumentLayout, Box<dyn std::error::Error>> {
-    let bytes = std::fs::read(input)?;
-    Ok(serde_json::from_slice(&bytes)?)
-}
-
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
     match cli.command {
         Command::Summary { input } => {
-            let document = read_document(&input)?;
+            let document = read_document(&input, &ProcessingLimits::default())?;
             document.validate()?;
             let regions: usize = document.pages.iter().map(|page| page.regions.len()).sum();
             let overflows = document
@@ -57,7 +52,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("overflows: {overflows}");
         }
         Command::Validate { input } => {
-            let document = read_document(&input)?;
+            let document = read_document(&input, &ProcessingLimits::default())?;
             document.validate()?;
             println!("valid: {} {}", document.format, document.version);
         }

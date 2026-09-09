@@ -1,0 +1,13 @@
+{
+  "format": "typsastra-docx-ir",
+  "version": "1.1",
+  "generator": {
+    "name": "compatibility-test",
+    "version": "1"
+  },
+  "source": {
+    "path": "future-minor.docx",
+    "byte_length": 1
+  },
+  "pages": []
+}

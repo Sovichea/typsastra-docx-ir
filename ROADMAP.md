@@ -46,10 +46,10 @@ The core owns the public data contract. Producer-specific paint commands and int
 - [x] Add semantic validation with path-aware errors.
 - [x] Add `validate`, `summary`, and `schema` commands.
 - [x] Add a validated minimal example and schema-drift CI check.
-- [ ] Define deterministic numeric rounding and serialization rules.
-- [ ] Record layout-engine, platform, font, and font-substitution metadata.
-- [ ] Add compatibility fixtures for unknown fields and supported format versions.
-- [ ] Add input limits for document size, ZIP expansion, element counts, nesting, and generated IR size.
+- [x] Define deterministic numeric rounding and serialization rules.
+- [x] Record layout-engine, platform, font, and font-substitution metadata.
+- [x] Add compatibility fixtures for unknown fields and supported format versions.
+- [x] Add input limits for document size, ZIP expansion, element counts, nesting, and generated IR size.
 
 ## Milestone 2: Durable source identity
 

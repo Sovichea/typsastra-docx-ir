@@ -6,18 +6,27 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+pub mod compatibility;
+pub mod limits;
+pub mod serialization;
 pub mod validation;
 
+pub use compatibility::{CompatibilityError, FormatVersion};
+pub use limits::{IrStats, LimitError, PackageBudget, ProcessingLimits, ReadError, read_document};
+pub use serialization::{CanonicalJsonError, to_canonical_json, to_canonical_json_with_limits};
 pub use validation::{ValidationError, ValidationErrors};
 
 pub const FORMAT: &str = "typsastra-docx-ir";
 pub const VERSION: &str = "1.0";
+pub const SUPPORTED_MAJOR_VERSION: u16 = 1;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct DocumentLayout {
     pub format: String,
     pub version: String,
     pub generator: GeneratorInfo,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub layout_environment: Option<LayoutEnvironment>,
     pub source: SourceInfo,
     pub pages: Vec<PageLayout>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -30,14 +39,19 @@ impl DocumentLayout {
             format: FORMAT.into(),
             version: VERSION.into(),
             generator,
+            layout_environment: None,
             source,
             pages,
             diagnostics: Vec::new(),
         }
     }
 
+    pub fn compatibility(&self) -> Result<FormatVersion, CompatibilityError> {
+        compatibility::check(&self.format, &self.version)
+    }
+
     pub fn is_supported(&self) -> bool {
-        self.format == FORMAT && self.version.starts_with("1.")
+        self.compatibility().is_ok()
     }
 
     pub fn validate(&self) -> Result<(), ValidationErrors> {
@@ -49,6 +63,55 @@ impl DocumentLayout {
 pub struct GeneratorInfo {
     pub name: String,
     pub version: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+pub struct LayoutEnvironment {
+    pub engine: LayoutEngineInfo,
+    pub platform: PlatformInfo,
+    /// Resolved font faces that were actually used during layout.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub fonts: Vec<FontInfo>,
+    /// Requested-to-resolved family substitutions observed during layout.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub font_substitutions: Vec<FontSubstitution>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+pub struct LayoutEngineInfo {
+    pub name: String,
+    pub version: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+pub struct PlatformInfo {
+    pub os: String,
+    pub architecture: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub version: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+pub struct FontInfo {
+    pub family: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub postscript_name: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub version: Option<String>,
+    /// Lowercase hexadecimal SHA-256 of the backing font file, when available.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub file_sha256: Option<String>,
+    /// Zero-based face index within a font collection.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub face_index: Option<u32>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+pub struct FontSubstitution {
+    pub requested_family: String,
+    pub resolved_family: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub resolved_postscript_name: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]

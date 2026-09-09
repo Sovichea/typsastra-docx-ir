@@ -15,6 +15,16 @@
     "generator": {
       "$ref": "#/$defs/GeneratorInfo"
     },
+    "layout_environment": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/LayoutEnvironment"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
     "pages": {
       "type": "array",
       "items": {
@@ -59,6 +69,66 @@
         "severity",
         "code",
         "message"
+      ]
+    },
+    "FontInfo": {
+      "type": "object",
+      "properties": {
+        "face_index": {
+          "description": "Zero-based face index within a font collection.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "family": {
+          "type": "string"
+        },
+        "file_sha256": {
+          "description": "Lowercase hexadecimal SHA-256 of the backing font file, when available.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "postscript_name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "version": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "family"
+      ]
+    },
+    "FontSubstitution": {
+      "type": "object",
+      "properties": {
+        "requested_family": {
+          "type": "string"
+        },
+        "resolved_family": {
+          "type": "string"
+        },
+        "resolved_postscript_name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "requested_family",
+        "resolved_family"
       ]
     },
     "GeneratorInfo": {
@@ -114,6 +184,50 @@
         "source",
         "bbox_pt",
         "placement"
+      ]
+    },
+    "LayoutEngineInfo": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version"
+      ]
+    },
+    "LayoutEnvironment": {
+      "type": "object",
+      "properties": {
+        "engine": {
+          "$ref": "#/$defs/LayoutEngineInfo"
+        },
+        "font_substitutions": {
+          "description": "Requested-to-resolved family substitutions observed during layout.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FontSubstitution"
+          }
+        },
+        "fonts": {
+          "description": "Resolved font faces that were actually used during layout.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FontInfo"
+          }
+        },
+        "platform": {
+          "$ref": "#/$defs/PlatformInfo"
+        }
+      },
+      "required": [
+        "engine",
+        "platform"
       ]
     },
     "LineLayout": {
@@ -265,6 +379,27 @@
         "segment_count",
         "text",
         "frame_bbox_pt"
+      ]
+    },
+    "PlatformInfo": {
+      "type": "object",
+      "properties": {
+        "architecture": {
+          "type": "string"
+        },
+        "os": {
+          "type": "string"
+        },
+        "version": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "os",
+        "architecture"
       ]
     },
     "Rect": {

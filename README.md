@@ -59,6 +59,7 @@ let layout = DocumentLayout::new(
 );
 
 layout.validate()?;
+let canonical_json = typsastra_docx_ir::to_canonical_json(&layout)?;
 ```
 
 ## Format conventions
@@ -70,6 +71,29 @@ layout.validate()?;
 - line ranges are half-open UTF-8 byte ranges into their paragraph text
 - source references always include the OPC part containing the editable node
 - consumers must ignore unknown fields within a compatible major version
+- version strings use strict, unpadded `major.minor` decimal syntax with each component in the `u16` range; this release reads supported `1.x` versions
+- on the JSON wire, adding optional fields is compatible within v1; removing fields, changing meanings, or adding required enum variants requires a new major version
+- unknown fields are discarded when JSON is deserialized into the typed Rust model
+
+### Deterministic serialization
+
+`to_canonical_json` is the normative producer serialization path. Canonical JSON is compact UTF-8 with no trailing newline. Object keys are sorted recursively by their UTF-8 bytes, while semantically meaningful array order is preserved.
+
+All point measurements are rounded at serialization time to the nearest `0.001 pt`, with ties rounded to the nearest even value. Non-finite values are invalid, and values that round to zero are emitted as positive zero. Readers may accept additional finite precision; producers should use canonical serialization so insignificant floating-point noise does not change output.
+
+Font and font-substitution records have no semantic order. Canonical serialization sorts them bytewise by their identity fields and removes exact duplicates.
+
+### Layout environment
+
+`generator` identifies the application that emitted the IR. Optional `layout_environment` metadata separately records the engine that performed pagination, the operating system and architecture, resolved font faces actually used during layout, and observed font substitutions.
+
+Font paths and the machine's complete installed-font inventory are intentionally excluded. When available, `file_sha256` is the lowercase SHA-256 of the exact font file and `face_index` is the zero-based face within a collection. A missing `layout_environment` means the producer did not record this metadata; it does not imply a particular engine or platform.
+
+### Resource limits
+
+`ProcessingLimits` defines conservative defaults for source document bytes, ZIP entries and expansion, XML/JSON nesting, XML and IR element counts, aggregate strings, paragraph text, and generated IR bytes. `read_document` bounds raw JSON before deserialization, then checks typed element and string budgets before semantic validation. DOCX producers use `PackageBudget` while streaming package and XML input, and `to_canonical_json_with_limits` checks in-memory budgets before cloning and caps generated output while writing.
+
+The JSON byte limit is the allocation boundary during deserialization; the finer element and string budgets bound subsequent processing rather than individual Serde allocations. The limits are security defaults rather than format maxima. Library callers may tune them for trusted, unusually large documents.
 
 The canonical schema is `schema/typsastra-docx-ir-v1.schema.json`.
 
