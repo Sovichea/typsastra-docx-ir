@@ -53,14 +53,14 @@ The core owns the public data contract. Producer-specific paint commands and int
 
 ## Milestone 2: Durable source identity
 
-- [ ] Parse and preserve WordprocessingML `w14:paraId` values.
-- [ ] Generate deterministic structural-path IDs when native IDs are absent.
-- [ ] Qualify every source ID with its OPC part, such as `word/document.xml` or `word/footnotes.xml`.
-- [ ] Carry provenance structurally through parse, style resolution, pagination, and IR conversion.
-- [ ] Keep one source ID stable when a paragraph splits across pages.
-- [ ] Assign segment indexes and counts after pagination.
-- [ ] Add fixtures proving identity survives text and style edits.
-- [ ] Document expected identity changes after insertions, deletions, and node replacement.
+- [x] Parse and preserve WordprocessingML `w14:paraId` values.
+- [x] Generate deterministic structural-path IDs when native IDs are absent.
+- [x] Qualify every source ID with its OPC part, such as `word/document.xml` or `word/footnotes.xml`.
+- [x] Provide provenance-preserving core APIs from identity extraction through style resolution, pagination, and IR conversion.
+- [x] Keep one source ID stable when a paragraph splits across pages.
+- [x] Assign segment indexes and counts after pagination.
+- [x] Add fixtures proving identity survives text and style edits.
+- [x] Document expected identity changes after insertions, deletions, and node replacement.
 
 Do not inject bookmarks or marker text to recover identity: those techniques can change the layout being measured.
 

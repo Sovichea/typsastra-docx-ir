@@ -8,12 +8,19 @@ use serde::{Deserialize, Serialize};
 
 pub mod compatibility;
 pub mod limits;
+pub mod provenance;
 pub mod serialization;
+pub mod source_identity;
 pub mod validation;
 
 pub use compatibility::{CompatibilityError, FormatVersion};
 pub use limits::{IrStats, LimitError, PackageBudget, ProcessingLimits, ReadError, read_document};
+pub use provenance::{
+    EmptyParagraphSegments, PaginatedParagraph, ParagraphSegmentDraft, Sourced,
+    finish_paginated_paragraph,
+};
 pub use serialization::{CanonicalJsonError, to_canonical_json, to_canonical_json_with_limits};
+pub use source_identity::{ParagraphIdentity, SourceIdentityError, extract_paragraph_identities};
 pub use validation::{ValidationError, ValidationErrors};
 
 pub const FORMAT: &str = "typsastra-docx-ir";
@@ -139,16 +146,17 @@ pub enum Region {
     Image(ImageRegion),
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 pub struct SourceRef {
-    /// OPC part containing the editable source node.
+    /// Canonical package-relative OPC part containing the editable source node.
+    /// The part is an inseparable component of the complete source identity.
     pub part: String,
-    /// Identity within `part`.
+    /// Native ID or deterministic physical XML path within `part`.
     pub id: String,
     pub identity: IdentityKind,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum IdentityKind {
     ParaId,

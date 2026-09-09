@@ -10,7 +10,7 @@ Typsastra DOCX IR maps editable WordprocessingML elements to pages, paragraphs, 
 
 This repository is an early v0.1 foundation. The Rust types establish the renderer-independent format boundary. The dxpdf adapter is the next producer milestone.
 
-The v1 contract currently models pages, source-aware paragraph segments, fitted-line UTF-8 ranges, images, overflow, and diagnostics. Table and story-region types remain planned.
+The v1 contract currently models pages, durable OPC-qualified paragraph identities, source-aware paragraph segments, fitted-line UTF-8 ranges, images, overflow, and diagnostics. Table and story-region types remain planned.
 
 ## Goals
 
@@ -69,11 +69,19 @@ let canonical_json = typsastra_docx_ir::to_canonical_json(&layout)?;
 - page indexes and paragraph segment indexes are zero-based
 - rectangles are represented by x, y, width, and height
 - line ranges are half-open UTF-8 byte ranges into their paragraph text
-- source references always include the OPC part containing the editable node
+- source references always include the canonical package-relative OPC part containing the editable node
+- paragraph identities prefer namespace-resolved `w14:paraId` values and otherwise use versioned structural paths
+- all page segments of one paragraph occurrence retain one source identity and receive indexes only after pagination
 - consumers must ignore unknown fields within a compatible major version
 - version strings use strict, unpadded `major.minor` decimal syntax with each component in the `u16` range; this release reads supported `1.x` versions
 - on the JSON wire, adding optional fields is compatible within v1; removing fields, changing meanings, or adding required enum variants requires a new major version
 - unknown fields are discarded when JSON is deserialized into the typed Rust model
+
+### Durable source identity
+
+`extract_paragraph_identities` scans any WordprocessingML story part without depending on a renderer. It resolves native paragraph IDs by namespace URI, canonicalizes them to uppercase, and generates prefix-independent physical XML paths when native IDs are absent. The extractor charges one ZIP-entry budget and every expanded input byte to `PackageBudget` before parsing. `Sourced<T>` preserves the resulting `SourceRef` through processing stages, and `finish_paginated_paragraph` assigns segment indexes after all page fragments are known.
+
+The complete identity is `(part, identity, id)`, never the bare ID. Structural paths survive text and style changes but can change after structural edits. See [Source identity](docs/source-identity.md) for the path grammar and the exact insertion, deletion, movement, and replacement behavior.
 
 ### Deterministic serialization
 
@@ -109,7 +117,7 @@ DOCX inspection will live in a separate producer adapter because accurate dxpdf 
 ## Roadmap
 
 - [x] Establish the renderer-independent Rust IR, schema, validation, and summary tooling.
-- [ ] Add durable OPC-qualified source IDs with `w14:paraId` support and deterministic fallbacks.
+- [x] Add durable OPC-qualified source IDs with `w14:paraId` support and deterministic fallbacks.
 - [ ] Build the separate dxpdf/Skia producer and standalone `inspect` command.
 - [ ] Cover tables, floating objects, story regions, notes, sections, mirrored margins, and binding gutters.
 - [ ] Add source-aware layout `diff` output for editing and regression workflows.

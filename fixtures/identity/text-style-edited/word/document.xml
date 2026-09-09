@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<doc:document xmlns:doc="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+              xmlns:id="http://schemas.microsoft.com/office/word/2010/wordml">
+  <doc:body>
+    <doc:p id:paraId="a1b2c3d4">
+      <doc:pPr><doc:pStyle doc:val="Heading2"/></doc:pPr>
+      <doc:r><doc:rPr><doc:b/></doc:rPr><doc:t>Changed native text</doc:t></doc:r>
+    </doc:p>
+    <doc:p>
+      <doc:pPr><doc:pStyle doc:val="Quote"/></doc:pPr>
+      <doc:r><doc:rPr><doc:i/></doc:rPr><doc:t>Changed fallback text</doc:t></doc:r>
+    </doc:p>
+  </doc:body>
+</doc:document>

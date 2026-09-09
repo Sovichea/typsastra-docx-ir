@@ -505,14 +505,14 @@
       "type": "object",
       "properties": {
         "id": {
-          "description": "Identity within `part`.",
+          "description": "Native ID or deterministic physical XML path within `part`.",
           "type": "string"
         },
         "identity": {
           "$ref": "#/$defs/IdentityKind"
         },
         "part": {
-          "description": "OPC part containing the editable source node.",
+          "description": "Canonical package-relative OPC part containing the editable source node.\nThe part is an inseparable component of the complete source identity.",
           "type": "string"
         }
       },

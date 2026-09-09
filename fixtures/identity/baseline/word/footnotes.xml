@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:footnotes xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+             xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml">
+  <w:footnote w:id="1">
+    <w:p w14:paraId="A1B2C3D4"><w:r><w:t>Native footnote</w:t></w:r></w:p>
+    <w:p><w:r><w:t>Generated footnote</w:t></w:r></w:p>
+  </w:footnote>
+</w:footnotes>

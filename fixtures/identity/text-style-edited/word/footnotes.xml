@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<story:footnotes xmlns:story="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+                 xmlns:identity="http://schemas.microsoft.com/office/word/2010/wordml">
+  <story:footnote story:id="1">
+    <story:p identity:paraId="a1b2c3d4">
+      <story:pPr><story:pStyle story:val="FootnoteText"/></story:pPr>
+      <story:r><story:rPr><story:b/></story:rPr><story:t>Edited native footnote</story:t></story:r>
+    </story:p>
+    <story:p>
+      <story:r><story:rPr><story:i/></story:rPr><story:t>Edited generated footnote</story:t></story:r>
+    </story:p>
+  </story:footnote>
+</story:footnotes>
