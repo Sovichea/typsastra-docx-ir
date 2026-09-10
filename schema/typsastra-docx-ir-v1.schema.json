@@ -3,6 +3,17 @@
   "title": "DocumentLayout",
   "type": "object",
   "properties": {
+    "coverage": {
+      "description": "Producer-declared measurement coverage, not independent verification.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/MeasurementCoverage"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
     "diagnostics": {
       "type": "array",
       "items": {
@@ -46,6 +57,30 @@
     "pages"
   ],
   "$defs": {
+    "CoverageStatus": {
+      "oneOf": [
+        {
+          "description": "The producer did not declare whether measurements were captured.",
+          "type": "string",
+          "const": "unknown"
+        },
+        {
+          "description": "Measurements were not captured; this does not mean content is absent.",
+          "type": "string",
+          "const": "absent"
+        },
+        {
+          "description": "Only some applicable content or properties were measured.",
+          "type": "string",
+          "const": "partial"
+        },
+        {
+          "description": "Measurements cover all applicable content in the document.",
+          "type": "string",
+          "const": "complete"
+        }
+      ]
+    },
     "Diagnostic": {
       "type": "object",
       "properties": {
@@ -252,6 +287,40 @@
         "range_utf8",
         "bbox_pt"
       ]
+    },
+    "MeasurementCoverage": {
+      "description": "Global coverage of measurements across all applicable document content.\nOmitted dimensions are unknown; absence of records never establishes coverage.",
+      "type": "object",
+      "properties": {
+        "composition_hierarchy": {
+          "$ref": "#/$defs/CoverageStatus",
+          "default": "unknown"
+        },
+        "drawing_appearance": {
+          "$ref": "#/$defs/CoverageStatus",
+          "default": "unknown"
+        },
+        "overflow": {
+          "$ref": "#/$defs/CoverageStatus",
+          "default": "unknown"
+        },
+        "pagination": {
+          "$ref": "#/$defs/CoverageStatus",
+          "default": "unknown"
+        },
+        "resolved_typography": {
+          "$ref": "#/$defs/CoverageStatus",
+          "default": "unknown"
+        },
+        "table_geometry": {
+          "$ref": "#/$defs/CoverageStatus",
+          "default": "unknown"
+        },
+        "text_geometry": {
+          "$ref": "#/$defs/CoverageStatus",
+          "default": "unknown"
+        }
+      }
     },
     "Overflow": {
       "type": "object",

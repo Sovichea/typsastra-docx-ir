@@ -35,6 +35,9 @@ pub struct DocumentLayout {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub layout_environment: Option<LayoutEnvironment>,
     pub source: SourceInfo,
+    /// Producer-declared measurement coverage, not independent verification.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub coverage: Option<MeasurementCoverage>,
     pub pages: Vec<PageLayout>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub diagnostics: Vec<Diagnostic>,
@@ -47,6 +50,7 @@ impl DocumentLayout {
             version: VERSION.into(),
             generator,
             layout_environment: None,
+            coverage: None,
             source,
             pages,
             diagnostics: Vec::new(),
@@ -64,6 +68,34 @@ impl DocumentLayout {
     pub fn validate(&self) -> Result<(), ValidationErrors> {
         validation::validate(self)
     }
+}
+
+/// Global coverage of measurements across all applicable document content.
+/// Omitted dimensions are unknown; absence of records never establishes coverage.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(default)]
+pub struct MeasurementCoverage {
+    pub pagination: CoverageStatus,
+    pub text_geometry: CoverageStatus,
+    pub resolved_typography: CoverageStatus,
+    pub table_geometry: CoverageStatus,
+    pub drawing_appearance: CoverageStatus,
+    pub composition_hierarchy: CoverageStatus,
+    pub overflow: CoverageStatus,
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum CoverageStatus {
+    /// The producer did not declare whether measurements were captured.
+    #[default]
+    Unknown,
+    /// Measurements were not captured; this does not mean content is absent.
+    Absent,
+    /// Only some applicable content or properties were measured.
+    Partial,
+    /// Measurements cover all applicable content in the document.
+    Complete,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]

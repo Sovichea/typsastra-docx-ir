@@ -2,15 +2,15 @@
 
 A source-aware intermediate representation of paginated DOCX layout.
 
-Typsastra DOCX IR maps editable WordprocessingML elements to pages, paragraphs, fitted lines, tables, cells, images, headers, footers, and notes without generating or rereading a PDF. It is designed for AI document editing, layout regression testing, template validation, and renderer interoperability.
+Typsastra DOCX IR is designed to map editable WordprocessingML elements to inspectable layout without generating or rereading a PDF. The goal is engine-populated geometry and resolved appearance for AI document editing, layout regression testing, template evaluation, and renderer interoperability.
 
 > Editable DOCX structure, resolved into inspectable page geometry.
 
 ## Status
 
-This repository is an early v0.1 foundation. The Rust types establish the renderer-independent format boundary. The dxpdf adapter is the next producer milestone.
+This repository is an early v0.1 foundation with a `1.0` format contract. The Rust types establish the renderer-independent boundary; an actual engine-populated producer remains pending.
 
-The v1 contract currently models pages, durable OPC-qualified paragraph identities, source-aware paragraph segments, fitted-line UTF-8 ranges, images, overflow, and diagnostics. Table and story-region types remain planned.
+The current contract models pages, durable OPC-qualified paragraph identities, source-aware paragraph segments, fitted-line UTF-8 ranges, images, overflow, and diagnostics. Optional measurement coverage declarations are supported. Resolved appearance, composition hierarchy, tables, shapes, and story-region extensions remain pending.
 
 ## Goals
 
@@ -22,13 +22,13 @@ The v1 contract currently models pages, durable OPC-qualified paragraph identiti
 
 ## CLI
 
-Validate an IR document structurally and semantically:
+Validate IR structure and semantic invariants, not document design or measurement completeness:
 
 ```bash
 cargo run -- validate examples/minimal.docx-ir.json
 ```
 
-Print a compact summary:
+Print a compact summary of recorded data (counts do not establish completeness):
 
 ```bash
 cargo run -- summary examples/minimal.docx-ir.json
@@ -62,6 +62,8 @@ layout.validate()?;
 let canonical_json = typsastra_docx_ir::to_canonical_json(&layout)?;
 ```
 
+The empty layout above can be valid without containing any measurements. Valid IR does not mean measured content, complete coverage, or acceptable design.
+
 ## Format conventions
 
 - coordinates and dimensions are PDF points, with 72 points per inch
@@ -74,8 +76,17 @@ let canonical_json = typsastra_docx_ir::to_canonical_json(&layout)?;
 - all page segments of one paragraph occurrence retain one source identity and receive indexes only after pagination
 - consumers must ignore unknown fields within a compatible major version
 - version strings use strict, unpadded `major.minor` decimal syntax with each component in the `u16` range; this release reads supported `1.x` versions
-- on the JSON wire, adding optional fields is compatible within v1; removing fields, changing meanings, or adding required enum variants requires a new major version
+- on the JSON wire, adding optional fields is compatible within v1; removing fields or changing meanings requires a new major version
+- the existing `Region` enum cannot accept new table/shape variants; adding them requires a major version or a deliberately designed forward-compatible representation first
 - unknown fields are discarded when JSON is deserialized into the typed Rust model
+
+### Coverage declarations
+
+The optional `DocumentLayout.coverage` field is additive; the format version stays `1.0`. Its dimensions are `pagination`, `text_geometry`, `resolved_typography`, `table_geometry`, `drawing_appearance`, `composition_hierarchy`, and `overflow`.
+
+Each dimension uses `unknown` (default), `partial`, `complete`, or `absent`. Missing coverage or dimensions mean `unknown`. `complete` declares measurements for all applicable content; `absent` means measurements were not captured, not that content is missing. There is no `not_applicable` state.
+
+These are global producer declarations, not independently verified evidence. Unknown coverage is never a pass. The CLI distinguishes recorded counts from declared coverage and unknown completeness; `validate` checks IR invariants, not design quality. An empty example passing validation is not evidence of measurement.
 
 ### Durable source identity
 
@@ -112,19 +123,22 @@ typsastra-docx-ir inspect book.docx
 typsastra-docx-ir diff before.docx-ir.json after.docx-ir.json
 ```
 
-DOCX inspection will live in a separate producer adapter because accurate dxpdf layout requires native Skia. The core IR, schema, validation, summary, and future diff tooling remain Skia-free.
+Inspection is pending and will reuse the existing sibling `typsastra-docx` workspace, with an adapter in `typsastra-dxpdf` or an optional adapter crate in that workspace. No new producer repository or producer workspace is planned here. The adapter will capture actual layout results without an intermediate PDF; its command packaging remains to be decided. The core IR, schema, validation, summary, and future diff/evaluation tooling remain independent of Skia and dxpdf.
 
 ## Roadmap
 
 - [x] Establish the renderer-independent Rust IR, schema, validation, and summary tooling.
 - [x] Add durable OPC-qualified source IDs with `w14:paraId` support and deterministic fallbacks.
-- [ ] Build the separate dxpdf/Skia producer and standalone `inspect` command.
-- [ ] Cover tables, floating objects, story regions, notes, sections, mirrored margins, and binding gutters.
-- [ ] Add source-aware layout `diff` output for editing and regression workflows.
-- [ ] Make output deterministic and harden processing of untrusted DOCX packages.
+- [ ] Integrate engine-populated IR inspection in the sibling workspace without PDF output.
+- [x] Add optional coverage declarations and coverage-aware CLI reporting.
+- [ ] Capture resolved run, paragraph, table, image, and shape appearance, including baselines, clips, and transforms.
+- [ ] Preserve composition hierarchy, reading order, and role provenance alongside source identities.
+- [ ] Choose a compatible representation or major version before adding table/shape regions; cover stories, notes, sections, and binding geometry.
+- [ ] Add source-linked diffs and separate objective checks from advisory evaluation, with unassessable outcomes when evidence is insufficient.
+- [ ] Verify producer determinism and harden end-to-end processing of untrusted DOCX packages.
 - [ ] Ship tested Windows, Linux, and macOS binaries that require no external PDF workflow.
 
-See [ROADMAP.md](ROADMAP.md) for the detailed checklist, architecture boundaries, and v1 release criteria.
+See [ROADMAP.md](ROADMAP.md) for the detailed checklist, architecture boundaries, and inspection release criteria.
 
 ## License
 
