@@ -42,6 +42,8 @@ pub enum CompatibilityError {
     WrongFormat { actual: String },
     MalformedVersion(String),
     UnsupportedMajor { actual: u16 },
+    UnsupportedMajorForContract { actual: u16, expected: u16 },
+    UnsupportedMajors { actual: u16 },
 }
 
 impl fmt::Display for CompatibilityError {
@@ -61,25 +63,52 @@ impl fmt::Display for CompatibilityError {
                 formatter,
                 "unsupported format major version {actual} (supported: {SUPPORTED_MAJOR_VERSION})"
             ),
+            Self::UnsupportedMajorForContract { actual, expected } => write!(
+                formatter,
+                "unsupported format major version {actual} for this contract (expected: {expected})"
+            ),
+            Self::UnsupportedMajors { actual } => write!(
+                formatter,
+                "unsupported format major version {actual} (supported: 1, 2)"
+            ),
         }
     }
 }
 
 impl std::error::Error for CompatibilityError {}
 
-pub fn check(format: &str, version: &str) -> Result<FormatVersion, CompatibilityError> {
+pub fn detect(format: &str, version: &str) -> Result<FormatVersion, CompatibilityError> {
     if format != FORMAT {
         return Err(CompatibilityError::WrongFormat {
             actual: format.into(),
         });
     }
-    let version = FormatVersion::parse(version)?;
-    if version.major != SUPPORTED_MAJOR_VERSION {
-        return Err(CompatibilityError::UnsupportedMajor {
-            actual: version.major,
+    FormatVersion::parse(version)
+}
+
+pub fn check_major(
+    format: &str,
+    version: &str,
+    expected_major: u16,
+) -> Result<FormatVersion, CompatibilityError> {
+    let version = detect(format, version)?;
+    if version.major != expected_major {
+        return Err(if expected_major == SUPPORTED_MAJOR_VERSION {
+            CompatibilityError::UnsupportedMajor {
+                actual: version.major,
+            }
+        } else {
+            CompatibilityError::UnsupportedMajorForContract {
+                actual: version.major,
+                expected: expected_major,
+            }
         });
     }
     Ok(version)
+}
+
+pub fn check(format: &str, version: &str) -> Result<FormatVersion, CompatibilityError> {
+    check_major(format, version, SUPPORTED_MAJOR_VERSION)
 }
 
 #[cfg(test)]

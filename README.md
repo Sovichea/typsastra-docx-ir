@@ -10,7 +10,7 @@ Typsastra DOCX IR is designed to map editable WordprocessingML elements to inspe
 
 This repository is an early v0.1 foundation with a `1.0` format contract. The Rust types establish the renderer-independent boundary. An initial engine-populated body-paragraph producer is now implemented as `typsastra-inspect` in the sibling `typsastra-docx` workspace; standalone distribution and comprehensive measurements remain pending.
 
-The current contract models pages, durable OPC-qualified paragraph identities, source-aware paragraph segments, fitted-line UTF-8 ranges, images, overflow, and diagnostics. Optional measurement coverage declarations are supported. Resolved appearance, composition hierarchy, tables, shapes, and story-region extensions remain pending.
+The root-level v1 contract models pages, durable OPC-qualified paragraph identities, source-aware paragraph segments, fitted-line UTF-8 ranges, images, overflow, and diagnostics. A separate `typsastra_docx_ir::v2` contract models resolved appearance, composition hierarchy, tables, shapes, stories, notes, sections, transforms, and clips. The sibling inspector now emits v2 main-story hierarchy, body-paragraph geometry, baselines, and resolved paragraph style; its remaining coverage is explicitly partial or absent.
 
 ## Goals
 
@@ -38,7 +38,8 @@ Print or regenerate the JSON Schema:
 
 ```bash
 cargo run -- schema
-cargo run -- schema --output schema/typsastra-docx-ir-v1.schema.json
+cargo run -- schema --major 1 --output schema/typsastra-docx-ir-v1.schema.json
+cargo run -- schema --major 2 --output schema/typsastra-docx-ir-v2.schema.json
 ```
 
 ## Library
@@ -64,6 +65,8 @@ let canonical_json = typsastra_docx_ir::to_canonical_json(&layout)?;
 
 The empty layout above can be valid without containing any measurements. Valid IR does not mean measured content, complete coverage, or acceptable design.
 
+Unqualified library types remain the v1 API. New Milestone 4 consumers use `typsastra_docx_ir::v2`; `read_any_document` dispatches either major into `AnyDocumentLayout`. See the validated [`minimal-v2.docx-ir.json`](examples/minimal-v2.docx-ir.json) example and the [v2 contract](docs/v2-contract.md).
+
 ## Format conventions
 
 - coordinates and dimensions are PDF points, with 72 points per inch
@@ -75,9 +78,9 @@ The empty layout above can be valid without containing any measurements. Valid I
 - paragraph identities prefer namespace-resolved `w14:paraId` values and otherwise use versioned structural paths
 - all page segments of one paragraph occurrence retain one source identity and receive indexes only after pagination
 - consumers must ignore unknown fields within a compatible major version
-- version strings use strict, unpadded `major.minor` decimal syntax with each component in the `u16` range; this release reads supported `1.x` versions
-- on the JSON wire, adding optional fields is compatible within v1; removing fields or changing meanings requires a new major version
-- the existing `Region` enum cannot accept new table/shape variants; adding them requires a major version or a deliberately designed forward-compatible representation first
+- version strings use strict, unpadded `major.minor` decimal syntax with each component in the `u16` range; `read_any_document` supports `1.x` and `2.x`, while `read_document` remains v1-only
+- on the JSON wire, adding optional fields is compatible within one major; removing fields, changing meanings, adding required fields, or extending a closed enum requires a new major version
+- format `2.0` deliberately introduces the closed story, paragraph, table, table-row, table-cell, image, and shape region set required by Milestone 4
 - unknown fields are discarded when JSON is deserialized into the typed Rust model
 
 ### Coverage declarations
@@ -116,7 +119,7 @@ Font paths and the machine's complete installed-font inventory are intentionally
 
 The JSON byte limit is the allocation boundary during deserialization; the finer element and string budgets bound subsequent processing rather than individual Serde allocations. The limits are security defaults rather than format maxima. Library callers may tune them for trusted, unusually large documents.
 
-The canonical schema is `schema/typsastra-docx-ir-v1.schema.json`.
+The canonical schemas are `schema/typsastra-docx-ir-v1.schema.json` and `schema/typsastra-docx-ir-v2.schema.json`. Running `schema` without `--major` continues to print v1 for CLI compatibility.
 
 ## Planned commands
 
@@ -125,7 +128,7 @@ typsastra-docx-ir inspect book.docx
 typsastra-docx-ir diff before.docx-ir.json after.docx-ir.json
 ```
 
-Initial inspection is implemented by `typsastra-inspect` in the sibling `typsastra-docx` workspace. Run `cargo run -p typsastra-inspect -- inspect book.docx -o book.docx-ir.json` there. The producer pins a core Git revision, so a sibling checkout is not required. The output path must be new. The adapter captures actual pagination and body-paragraph geometry without an intermediate PDF and emits canonical IR with partial/absent coverage. It does not yet capture table-cell or repeated-story regions, appearance, or complete overflow. This is a development CLI, not the finished standalone distribution. The core IR, schema, validation, summary, and future diff/evaluation tooling remain independent of Skia and dxpdf.
+Initial inspection is implemented by `typsastra-inspect` in the sibling `typsastra-docx` workspace. Run `cargo run -p typsastra-inspect -- inspect book.docx -o book.docx-ir.json` there. During Milestone 4 development the producer uses the sibling core checkout. The output path must be new. The adapter captures actual pagination, page-local main-story hierarchy, body-paragraph geometry, baselines, and applied paragraph style without an intermediate PDF, and emits canonical v2 IR with partial/absent coverage. It does not yet capture run appearance, tables, drawings, repeated stories, section geometry, or complete overflow. This is a development CLI, not the finished standalone distribution. The core IR, schema, validation, summary, and future diff/evaluation tooling remain independent of Skia and dxpdf.
 
 ## Roadmap
 
@@ -133,9 +136,9 @@ Initial inspection is implemented by `typsastra-inspect` in the sibling `typsast
 - [x] Add durable OPC-qualified source IDs with `w14:paraId` support and deterministic fallbacks.
 - [x] Integrate initial engine-populated body-paragraph IR inspection in the sibling workspace without PDF output.
 - [x] Add optional coverage declarations and coverage-aware CLI reporting.
-- [ ] Capture resolved run, paragraph, table, image, and shape appearance, including baselines, clips, and transforms.
-- [ ] Preserve composition hierarchy, reading order, and role provenance alongside source identities.
-- [ ] Choose a compatible representation or major version before adding table/shape regions; cover stories, notes, sections, and binding geometry.
+- [x] Define the v2 core contract for resolved run, paragraph, table, image, and shape appearance, including baselines, clips, and transforms.
+- [x] Define and validate composition hierarchy, reading order, and role provenance alongside source identities.
+- [x] Introduce format `2.0` for table/shape regions and model stories, notes, sections, and binding geometry; producer capture remains pending.
 - [ ] Add source-linked diffs and separate objective checks from advisory evaluation, with unassessable outcomes when evidence is insufficient.
 - [ ] Verify producer determinism and harden end-to-end processing of untrusted DOCX packages.
 - [ ] Ship tested Windows, Linux, and macOS binaries that require no external PDF workflow.

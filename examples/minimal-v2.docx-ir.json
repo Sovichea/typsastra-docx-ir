@@ -1,0 +1,175 @@
+{
+  "format": "typsastra-docx-ir",
+  "version": "2.0",
+  "generator": {
+    "name": "example",
+    "version": "0.1.0"
+  },
+  "source": {
+    "path": "minimal.docx",
+    "byte_length": 1024
+  },
+  "coverage": {
+    "pagination": "complete",
+    "text_geometry": "complete",
+    "resolved_typography": "complete",
+    "table_geometry": "absent",
+    "drawing_appearance": "absent",
+    "composition_hierarchy": "complete",
+    "overflow": "complete"
+  },
+  "sections": [
+    {
+      "id": "section-0",
+      "source": {
+        "part": "word/document.xml",
+        "id": "path-v1:/Q{http://schemas.openxmlformats.org/wordprocessingml/2006/main}document[1]/Q{http://schemas.openxmlformats.org/wordprocessingml/2006/main}body[1]/Q{http://schemas.openxmlformats.org/wordprocessingml/2006/main}sectPr[1]",
+        "identity": "generated_path"
+      },
+      "index": 0,
+      "page_range": [0, 1],
+      "break_kind": "next_page",
+      "title_page": false,
+      "different_odd_even": false
+    }
+  ],
+  "pages": [
+    {
+      "index": 0,
+      "number": 1,
+      "size_pt": { "width": 612.0, "height": 792.0 },
+      "orientation": "portrait",
+      "section_geometries": [
+        {
+          "section_id": "section-0",
+          "margins_pt": { "top": 72.0, "right": 72.0, "bottom": 72.0, "left": 72.0 },
+          "gutter_pt": 0.0,
+          "usable_content_bbox_pt": { "x": 72.0, "y": 72.0, "width": 468.0, "height": 648.0 },
+          "columns": [
+            {
+              "index": 0,
+              "bbox_pt": { "x": 72.0, "y": 72.0, "width": 468.0, "height": 648.0 }
+            }
+          ]
+        }
+      ],
+      "regions": [
+        {
+          "kind": "story",
+          "id": "story-body-0",
+          "parent_id": null,
+          "owner_id": null,
+          "reading_order": 0,
+          "role": {
+            "role": { "kind": "body" },
+            "provenance": { "kind": "inferred", "rule": "main_document_part" }
+          },
+          "geometry": {
+            "bbox_pt": { "x": 72.0, "y": 72.0, "width": 468.0, "height": 648.0 },
+            "local_bbox_pt": { "x": 0.0, "y": 0.0, "width": 468.0, "height": 648.0 },
+            "local_to_parent": { "m11": 1.0, "m12": 0.0, "m21": 0.0, "m22": 1.0, "dx": 72.0, "dy": 72.0 },
+            "clip": null
+          },
+          "source": {
+            "part": "word/document.xml",
+            "id": "path-v1:/Q{http://schemas.openxmlformats.org/wordprocessingml/2006/main}document[1]/Q{http://schemas.openxmlformats.org/wordprocessingml/2006/main}body[1]",
+            "identity": "generated_path"
+          },
+          "story_kind": "body",
+          "occurrence": 0
+        },
+        {
+          "kind": "paragraph",
+          "id": "paragraph-0-0",
+          "parent_id": "story-body-0",
+          "owner_id": null,
+          "reading_order": 0,
+          "role": {
+            "role": { "kind": "body" },
+            "provenance": {
+              "kind": "source_declared",
+              "source": {
+                "part": "word/document.xml",
+                "id": "2A4B6C8D",
+                "identity": "para_id"
+              },
+              "declaration": "paragraph style Normal"
+            }
+          },
+          "geometry": {
+            "bbox_pt": { "x": 72.0, "y": 72.0, "width": 468.0, "height": 14.0 },
+            "local_bbox_pt": { "x": 0.0, "y": 0.0, "width": 468.0, "height": 14.0 },
+            "local_to_parent": { "m11": 1.0, "m12": 0.0, "m21": 0.0, "m22": 1.0, "dx": 0.0, "dy": 0.0 },
+            "clip": null
+          },
+          "source": {
+            "part": "word/document.xml",
+            "id": "2A4B6C8D",
+            "identity": "para_id"
+          },
+          "fragment": {
+            "index": 0,
+            "count": 1,
+            "continued_from_previous": false,
+            "continues_on_next": false
+          },
+          "text": "Hello, layout.",
+          "frame_bbox_pt": { "x": 72.0, "y": 72.0, "width": 468.0, "height": 14.0 },
+          "content_bbox_pt": { "x": 72.0, "y": 72.0, "width": 78.0, "height": 14.0 },
+          "style": {
+            "alignment": "start",
+            "direction": "left_to_right",
+            "spacing_before_pt": 0.0,
+            "spacing_after_pt": 0.0,
+            "line_spacing": { "kind": "auto", "multiplier": 1.0 },
+            "indent_start_pt": 0.0,
+            "indent_end_pt": 0.0,
+            "first_line_indent_pt": 0.0,
+            "borders": { "top": null, "right": null, "bottom": null, "left": null },
+            "shading": null,
+            "keep_next": false,
+            "keep_lines": false,
+            "widow_control": true,
+            "page_break_before": false
+          },
+          "lines": [
+            {
+              "range_utf8": [0, 14],
+              "bbox_pt": { "x": 72.0, "y": 72.0, "width": 78.0, "height": 14.0 },
+              "baseline_y_pt": 82.0,
+              "ascent_pt": 10.0,
+              "descent_pt": 4.0
+            }
+          ],
+          "runs": [
+            {
+              "source": null,
+              "range_utf8": [0, 14],
+              "typography": {
+                "font": { "family": "Aptos", "postscript_name": "Aptos", "face_index": 0 },
+                "size_pt": 11.0,
+                "color": { "red": 0, "green": 0, "blue": 0, "alpha": 1.0 },
+                "bold": false,
+                "italic": false,
+                "underline": null,
+                "strike": null,
+                "letter_spacing_pt": 0.0,
+                "horizontal_scale": 1.0,
+                "baseline_shift_pt": 0.0
+              }
+            }
+          ],
+          "content": [
+            { "range_utf8": [0, 14], "source": null, "kind": "text" }
+          ],
+          "overflow": {
+            "horizontal": false,
+            "vertical": false,
+            "clipped": false,
+            "past_content_area_pt": 0.0
+          }
+        }
+      ]
+    }
+  ]
+}

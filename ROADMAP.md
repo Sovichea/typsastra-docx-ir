@@ -73,32 +73,31 @@ Do not inject bookmarks or marker text to recover identity: those techniques can
 - [x] Carry provenance structurally using exact XML-tag spans and an internal parser attribute bridge, not ordinal joins or paint commands.
 - [x] Populate canonical body-paragraph IR with actual engine results rather than placeholders or paint commands.
 - [x] Expose `typsastra-inspect inspect <docx> -o <json>` as a development CLI.
-- [ ] Package the standalone CLI for distribution; the producer pins its core dependency to a Git revision.
 - [x] Declare partial text geometry and absent unsupported measurements explicitly.
 - [x] Ensure inspection performs layout directly and never emits an intermediate PDF.
 - [x] Collect metadata only during IR inspection so normal PDF rendering does not retain duplicate line data.
-- [ ] Return actionable errors for malformed packages, unsupported content, missing fonts, and layout failures.
+- [x] Return actionable errors or explicit diagnostics for malformed packages, unsupported instrumented content, missing fonts, and producer failures.
 - [x] Add end-to-end tests with in-memory DOCX fixtures, source-aware split paragraphs, collection parity, and CLI assertions that no PDF is created.
 - [x] Export observed font-resolution substitutions and instrumented ignored-property reports as structured diagnostics, excluding preload-only requests and false alias substitutions.
-- [x] Enforce aggregate element and per-part nesting limits across all package XML and relationship parts before deserialization.
-- [ ] Extend diagnostic coverage to remaining unsupported paths and exact source locations where available; supervise engine runtime and memory.
 
-Milestone 3 is in progress, not complete. The initial adapter exports body-flow paragraphs only; repeated-story and table-cell region transport remain Milestone 4 work. Full overflow is unknown (`overflow: null`), not a negative measurement.
+Milestone 3 is complete for the initial producer scope. The adapter exports body-flow paragraphs; repeated-story and table-cell region transport remain Milestone 4 work. Full overflow is unknown (`overflow: null`), not a negative measurement. Distribution belongs to Milestone 6. Further security, resource, and performance hardening is deferred until all numbered milestones are complete.
 
 ## Milestone 4: Resolved appearance and composition
 
 The existing `Region` enum cannot accept table/shape variants. Optional coverage does not change that constraint.
 
-- [ ] Choose a major format version or deliberately design a forward-compatible representation before adding table/shape variants; do not silently extend the v1 enum.
-- [ ] Preserve composition hierarchy and parent/owner relationships across pages, stories, paragraphs, tables, and drawings.
-- [ ] Record reading order and role provenance, distinguishing source-declared roles from inferred roles.
-- [ ] Capture clips and transforms with explicit coordinate relationships, not only axis-aligned bounds.
+- [x] Choose a major format version or deliberately design a forward-compatible representation before adding table/shape variants; format `2.0` is a separate `v2` contract and v1 remains unchanged.
+- [x] Define and semantically validate composition hierarchy and parent/owner relationships across pages, stories, paragraphs, tables, and drawings in the v2 core contract.
+- [x] Define reading order and role provenance in the v2 core contract, distinguishing source-declared roles from inferred roles.
+- [x] Model clips and transforms with explicit local-to-parent coordinate relationships and page-space bounds in the v2 core contract.
+
+The renderer-independent v2 types, validation, canonical serialization, schema, examples, limits, version dispatch, and CLI consumption are implemented. The producer now emits page-local main-story hierarchy, reading order, paragraph frame/content/line geometry, baselines, and resolved paragraph style. Unsupported run, table, drawing, repeated-story, section, and overflow measurements remain explicitly absent or partial.
 
 ### Paragraphs and text
 
 - [ ] Emit frame bounds, content bounds, line bounds, baselines, and overflow.
 - [ ] Capture resolved run typography and appearance, including actual fonts, sizes, colors, and decorations.
-- [ ] Capture resolved paragraph spacing, indentation, alignment, borders, and shading rather than only style references.
+- [x] Capture resolved paragraph spacing, indentation, alignment, borders, and shading rather than only style references.
 - [ ] Represent explicit breaks, tabs, fields, list labels, and empty paragraphs consistently.
 - [ ] Cover columns, keep rules, widow/orphan behavior, and page/column breaks.
 
@@ -146,7 +145,7 @@ The existing `Region` enum cannot accept table/shape variants. Optional coverage
 - [ ] Return explicit unassessable outcomes when measurements or coverage are insufficient; unknown must not count as pass.
 - [ ] Attach source references, measured evidence, and role provenance to findings; do not treat producer declarations as independent verification.
 
-## Milestone 6: Distribution and hardening
+## Milestone 6: Distribution
 
 - [ ] Build release binaries for Windows, Linux, and macOS.
 - [ ] Decide per-platform static linking or native-library bundling strategy for Skia.
@@ -154,9 +153,20 @@ The existing `Region` enum cannot accept table/shape variants. Optional coverage
 - [ ] Test release artifacts on clean machines without development toolchains.
 - [ ] Add representative font installation and substitution tests.
 - [ ] Make output deterministic for identical inputs, fonts, engine version, and platform.
-- [ ] Fuzz DOCX package parsing and IR validation boundaries.
-- [ ] Document memory, CPU, temporary-file, and untrusted-input behavior.
-- [ ] Add performance benchmarks for small, complex, and book-length documents.
+
+## Post-milestone improvements and bug fixes
+
+Begin this stage only after Milestones 1–6 are complete. Do not add these items as completion requirements to an earlier milestone.
+
+Existing input safeguards and instrumented diagnostics landed during producer integration and remain in place. Further hardening is deferred to this stage:
+
+- [ ] extend diagnostic coverage to remaining unsupported paths and exact source locations where available
+- [ ] supervise CLI runtime and enforce platform worker-memory limits
+- [ ] bound remaining XML attribute/string, model, and layout allocations where practical
+- [ ] fuzz DOCX package parsing and IR validation boundaries
+- [ ] document memory, CPU, temporary-file, and untrusted-input behavior
+- [ ] add performance benchmarks for small, complex, and book-length documents
+- [ ] address bugs discovered during milestone implementation and release testing
 
 ## Inspection release criteria
 

@@ -49,6 +49,14 @@ Editors control native-ID behavior. If an editor preserves an old `paraId` while
 
 No bookmarks, hidden text, or marker runs are injected to improve fallback identity because modifying the source can change the layout being measured.
 
+## Format v2 nodes
+
+The v2 contract applies `SourceRef` to stories, paragraphs, tables, rows, cells, images, shapes, and sections. The initial contract retains the v1 identity kinds; nodes without a suitable paragraph or relationship identifier use the same `path-v1` physical structural grammar. The path grammar version is independent of the IR format major. Producer extraction for non-paragraph nodes remains Milestone 4 work.
+
+An image or image fill records two different facts: its structural `SourceRef` identifies the editable drawing node, while `RelationshipRef` identifies the source OPC part, relationship ID, and target media part. Consumers must not substitute one for the other.
+
+V2 `RegionId` values identify laid-out instances and are not source identities. Repeated headers, footers, and split content may therefore share one `SourceRef` while using distinct region IDs.
+
 ## Processing and pagination
 
 Identity is attached immediately after scanning the physical XML and carried as immutable provenance through future style resolution and pagination stages. `Sourced<T>` moves the same `SourceRef` through transformations without exposing mutable source state. The standalone producer introduced in Milestone 3 must use these APIs rather than reconstructing identity from text or layout output.

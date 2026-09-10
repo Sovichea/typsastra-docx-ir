@@ -7,13 +7,16 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 pub mod compatibility;
+pub mod document;
 pub mod limits;
 pub mod provenance;
 pub mod serialization;
 pub mod source_identity;
+pub mod v2;
 pub mod validation;
 
 pub use compatibility::{CompatibilityError, FormatVersion};
+pub use document::{AnyDocumentLayout, detect_document_version, read_any_document};
 pub use limits::{IrStats, LimitError, PackageBudget, ProcessingLimits, ReadError, read_document};
 pub use provenance::{
     EmptyParagraphSegments, PaginatedParagraph, ParagraphSegmentDraft, Sourced,

@@ -356,7 +356,7 @@ pub fn read_document(path: &Path, limits: &ProcessingLimits) -> Result<DocumentL
     Ok(document)
 }
 
-fn check_json_depth(bytes: &[u8], max_depth: usize) -> Result<(), LimitError> {
+pub(crate) fn check_json_depth(bytes: &[u8], max_depth: usize) -> Result<(), LimitError> {
     let mut depth = 0usize;
     let mut in_string = false;
     let mut escaped = false;
