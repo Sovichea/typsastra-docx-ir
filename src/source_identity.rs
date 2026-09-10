@@ -1,8 +1,4 @@
-use std::{
-    collections::HashMap,
-    fmt,
-    io::{Cursor, Read},
-};
+use std::{collections::HashMap, fmt, io::Read, ops::Range};
 
 use quick_xml::{
     NsReader,
@@ -25,6 +21,18 @@ pub struct ParagraphIdentity {
     /// Physical XML location retained even when a native ID is available.
     pub structural_path: String,
     pub source: SourceRef,
+}
+
+/// A paragraph identity located in the original XML byte stream.
+///
+/// The byte span is parser transport metadata, not part of the stable identity.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct LocatedParagraphIdentity {
+    pub identity: ParagraphIdentity,
+    /// Half-open raw byte range from `<` through the byte after `>` in the
+    /// paragraph's opening or empty tag, including any attributes and `/>`.
+    /// Offsets include a leading BOM and are valid only for the original input.
+    pub start_tag_range: Range<usize>,
 }
 
 impl ParagraphIdentity {
@@ -130,10 +138,39 @@ struct PathFrame {
 /// the per-entry and total expanded-byte limits before XML parsing begins.
 pub fn extract_paragraph_identities<R: Read>(
     part: &str,
-    mut xml: R,
+    xml: R,
     budget: &mut PackageBudget,
     limits: &ProcessingLimits,
 ) -> Result<Vec<ParagraphIdentity>, SourceIdentityError> {
+    Ok(
+        extract_paragraph_identities_impl(part, xml, budget, limits)?
+            .into_iter()
+            .map(|located| located.identity)
+            .collect(),
+    )
+}
+
+/// Extracts paragraph identities together with exact opening-tag byte ranges.
+///
+/// Uses the same namespace resolution, physical paths, validation, and budget
+/// accounting as [`extract_paragraph_identities`]. Ranges address the raw bytes
+/// read from `xml`, including any UTF-8 BOM, not decoded character positions.
+/// They are parser transport metadata and must not be used as stable identities.
+pub fn extract_paragraph_identities_with_spans<R: Read>(
+    part: &str,
+    xml: R,
+    budget: &mut PackageBudget,
+    limits: &ProcessingLimits,
+) -> Result<Vec<LocatedParagraphIdentity>, SourceIdentityError> {
+    extract_paragraph_identities_impl(part, xml, budget, limits)
+}
+
+fn extract_paragraph_identities_impl<R: Read>(
+    part: &str,
+    mut xml: R,
+    budget: &mut PackageBudget,
+    limits: &ProcessingLimits,
+) -> Result<Vec<LocatedParagraphIdentity>, SourceIdentityError> {
     validate_part_name(part).map_err(|()| SourceIdentityError::InvalidPartName(part.into()))?;
 
     budget.begin_zip_entry(limits)?;
@@ -150,9 +187,8 @@ pub fn extract_paragraph_identities<R: Read>(
         xml_bytes.extend_from_slice(&chunk[..read]);
     }
 
-    let mut reader = NsReader::from_reader(Cursor::new(xml_bytes));
+    let mut reader = NsReader::from_reader(xml_bytes.as_slice());
     reader.config_mut().trim_text(false);
-    let mut buffer = Vec::new();
     let mut stack: Vec<PathFrame> = Vec::new();
     let mut root_counts = HashMap::new();
     let mut identities = Vec::new();
@@ -161,7 +197,7 @@ pub fn extract_paragraph_identities<R: Read>(
 
     loop {
         let (resolution, event) = reader
-            .read_resolved_event_into(&mut buffer)
+            .read_resolved_event()
             .map_err(|error| SourceIdentityError::InvalidXml(error.to_string()))?;
         match event {
             Event::Start(element) => {
@@ -183,6 +219,7 @@ pub fn extract_paragraph_identities<R: Read>(
                         path,
                         &mut identities,
                         &mut native_paths,
+                        start_tag_range(&reader, xml_bytes.len(), &element, false),
                     )?;
                 }
                 stack.push(PathFrame {
@@ -209,6 +246,7 @@ pub fn extract_paragraph_identities<R: Read>(
                         path,
                         &mut identities,
                         &mut native_paths,
+                        start_tag_range(&reader, xml_bytes.len(), &element, true),
                     )?;
                 }
             }
@@ -235,7 +273,6 @@ pub fn extract_paragraph_identities<R: Read>(
             Event::Eof => break,
             _ => {}
         }
-        buffer.clear();
     }
 
     if !root_seen {
@@ -249,6 +286,19 @@ pub fn extract_paragraph_identities<R: Read>(
         ));
     }
     Ok(identities)
+}
+
+fn start_tag_range(
+    reader: &NsReader<&[u8]>,
+    input_len: usize,
+    element: &BytesStart<'_>,
+    empty: bool,
+) -> Range<usize> {
+    // The slice reader consumes exactly one event without read-ahead. Measuring
+    // remaining raw input includes BOM bytes even if parser positions omit them.
+    let end = input_len - reader.get_ref().len();
+    let delimiters = if empty { 3 } else { 2 }; // `<.../>` versus `<...>`
+    end - element.as_ref().len() - delimiters..end
 }
 
 fn begin_element(
@@ -298,8 +348,9 @@ fn record_paragraph<R: std::io::BufRead>(
     reader: &NsReader<R>,
     element: &BytesStart<'_>,
     structural_path: String,
-    identities: &mut Vec<ParagraphIdentity>,
+    identities: &mut Vec<LocatedParagraphIdentity>,
     native_paths: &mut HashMap<String, String>,
+    start_tag_range: Range<usize>,
 ) -> Result<(), SourceIdentityError> {
     let mut para_id = None;
     for attribute in element.attributes() {
@@ -341,10 +392,13 @@ fn record_paragraph<R: std::io::BufRead>(
             identity: IdentityKind::GeneratedPath,
         }
     };
-    identities.push(ParagraphIdentity {
-        ordinal: identities.len(),
-        structural_path,
-        source,
+    identities.push(LocatedParagraphIdentity {
+        identity: ParagraphIdentity {
+            ordinal: identities.len(),
+            structural_path,
+            source,
+        },
+        start_tag_range,
     });
     Ok(())
 }

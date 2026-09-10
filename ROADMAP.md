@@ -2,7 +2,7 @@
 
 This roadmap tracks the work required to make `typsastra-docx-ir` a standalone, source-aware DOCX layout inspection tool.
 
-The intended workflow is shown below; `inspect` and `diff` remain pending, and producer command packaging is not yet decided:
+The intended unified workflow is shown below. Initial inspection is available through `typsastra-inspect inspect` in the sibling workspace; unified distribution and `diff` remain pending:
 
 ```text
 typsastra-docx-ir inspect book.docx -o book.docx-ir.json
@@ -23,9 +23,9 @@ The renderer-independent core must remain free of Skia and dxpdf dependencies. T
 Reuse the existing sibling `typsastra-docx` workspace rather than create a producer repository or producer workspace here:
 
 - `typsastra-docx-ir`: renderer-independent IR, schema, validation, summary, and future diff/evaluation tooling
-- sibling `typsastra-docx`: existing layout engine, with a pending adapter in `typsastra-dxpdf` or an optional adapter crate within that workspace
+- sibling `typsastra-docx`: existing layout engine and initial `typsastra-inspect` adapter/CLI workspace crate
 
-The core stays independent of both Skia and dxpdf and owns the public data contract. The adapter must capture actual engine layout and resolved appearance without generating or rereading PDF. Producer-specific paint commands and internal renderer types must not leak into the canonical IR. Producer integration and standalone packaging are not implemented milestones.
+The core stays independent of both Skia and dxpdf and owns the public data contract. The adapter must capture actual engine layout and resolved appearance without generating or rereading PDF. Producer-specific paint commands and internal renderer types must not leak into the canonical IR. Initial body-paragraph producer integration is implemented; complete measurement coverage and standalone packaging remain pending.
 
 ## Milestone 1: Stable core contract
 
@@ -68,16 +68,20 @@ Do not inject bookmarks or marker text to recover identity: those techniques can
 
 ## Milestone 3: Standalone DOCX inspection
 
-- [ ] Integrate an adapter in sibling `typsastra-docx`'s `typsastra-dxpdf` or an optional adapter crate in that existing workspace.
-- [ ] Adapt the prototype's opt-in region collection while preserving OPC-qualified source identities through parsing, resolution, and pagination; traversal counters are not durable identities.
-- [ ] Carry provenance structurally rather than joining XML and layout paragraphs by ordinal or recovering it from paint commands.
-- [ ] Populate canonical IR with actual engine results rather than placeholders or paint commands.
-- [ ] Expose `inspect <docx> -o <json>` through the chosen producer CLI packaging.
-- [ ] Declare coverage honestly, including unsupported or uncaptured measurements.
-- [ ] Ensure inspection performs layout directly and never emits an intermediate PDF.
-- [ ] Collect metadata only during IR inspection so normal PDF rendering does not retain duplicate line data.
+- [x] Integrate `typsastra-inspect` as an adapter crate in the existing sibling `typsastra-docx` workspace (development CLI).
+- [x] Adapt the prototype's opt-in body-paragraph collection with OPC-qualified identities through parsing, resolution, and pagination; do not export its traversal counters as durable identities.
+- [x] Carry provenance structurally using exact XML-tag spans and an internal parser attribute bridge, not ordinal joins or paint commands.
+- [x] Populate canonical body-paragraph IR with actual engine results rather than placeholders or paint commands.
+- [x] Expose `typsastra-inspect inspect <docx> -o <json>` as a development CLI.
+- [ ] Package the standalone CLI for distribution; the producer pins its core dependency to a Git revision.
+- [x] Declare partial text geometry and absent unsupported measurements explicitly.
+- [x] Ensure inspection performs layout directly and never emits an intermediate PDF.
+- [x] Collect metadata only during IR inspection so normal PDF rendering does not retain duplicate line data.
 - [ ] Return actionable errors for malformed packages, unsupported content, missing fonts, and layout failures.
-- [ ] Add end-to-end tests that inspect DOCX fixtures and assert that no PDF is created.
+- [x] Add end-to-end tests with in-memory DOCX fixtures, source-aware split paragraphs, collection parity, and CLI assertions that no PDF is created.
+- [ ] Extend structured font-substitution/unsupported-content diagnostics and bound auxiliary XML and engine resource use.
+
+Milestone 3 is in progress, not complete. The initial adapter exports body-flow paragraphs only; repeated-story and table-cell region transport remain Milestone 4 work. Full overflow is unknown (`overflow: null`), not a negative measurement.
 
 ## Milestone 4: Resolved appearance and composition
 

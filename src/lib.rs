@@ -20,7 +20,10 @@ pub use provenance::{
     finish_paginated_paragraph,
 };
 pub use serialization::{CanonicalJsonError, to_canonical_json, to_canonical_json_with_limits};
-pub use source_identity::{ParagraphIdentity, SourceIdentityError, extract_paragraph_identities};
+pub use source_identity::{
+    LocatedParagraphIdentity, ParagraphIdentity, SourceIdentityError, extract_paragraph_identities,
+    extract_paragraph_identities_with_spans,
+};
 pub use validation::{ValidationError, ValidationErrors};
 
 pub const FORMAT: &str = "typsastra-docx-ir";

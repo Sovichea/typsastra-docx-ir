@@ -8,7 +8,7 @@ Typsastra DOCX IR is designed to map editable WordprocessingML elements to inspe
 
 ## Status
 
-This repository is an early v0.1 foundation with a `1.0` format contract. The Rust types establish the renderer-independent boundary; an actual engine-populated producer remains pending.
+This repository is an early v0.1 foundation with a `1.0` format contract. The Rust types establish the renderer-independent boundary. An initial engine-populated body-paragraph producer is now implemented as `typsastra-inspect` in the sibling `typsastra-docx` workspace; standalone distribution and comprehensive measurements remain pending.
 
 The current contract models pages, durable OPC-qualified paragraph identities, source-aware paragraph segments, fitted-line UTF-8 ranges, images, overflow, and diagnostics. Optional measurement coverage declarations are supported. Resolved appearance, composition hierarchy, tables, shapes, and story-region extensions remain pending.
 
@@ -92,6 +92,8 @@ These are global producer declarations, not independently verified evidence. Unk
 
 `extract_paragraph_identities` scans any WordprocessingML story part without depending on a renderer. It resolves native paragraph IDs by namespace URI, canonicalizes them to uppercase, and generates prefix-independent physical XML paths when native IDs are absent. The extractor charges one ZIP-entry budget and every expanded input byte to `PackageBudget` before parsing. `Sourced<T>` preserves the resulting `SourceRef` through processing stages, and `finish_paginated_paragraph` assigns segment indexes after all page fragments are known.
 
+`extract_paragraph_identities_with_spans` additionally exposes exact opening-tag byte ranges for an in-memory parser bridge. These spans refer to the supplied XML bytes, are not durable IDs, and avoid joining XML and layout by ordinal. Both extraction APIs share identity rules and budget accounting.
+
 The complete identity is `(part, identity, id)`, never the bare ID. Structural paths survive text and style changes but can change after structural edits. See [Source identity](docs/source-identity.md) for the path grammar and the exact insertion, deletion, movement, and replacement behavior.
 
 ### Deterministic serialization
@@ -123,13 +125,13 @@ typsastra-docx-ir inspect book.docx
 typsastra-docx-ir diff before.docx-ir.json after.docx-ir.json
 ```
 
-Inspection is pending and will reuse the existing sibling `typsastra-docx` workspace, with an adapter in `typsastra-dxpdf` or an optional adapter crate in that workspace. No new producer repository or producer workspace is planned here. The adapter will capture actual layout results without an intermediate PDF; its command packaging remains to be decided. The core IR, schema, validation, summary, and future diff/evaluation tooling remain independent of Skia and dxpdf.
+Initial inspection is implemented by `typsastra-inspect` in the sibling `typsastra-docx` workspace. Run `cargo run -p typsastra-inspect -- inspect book.docx -o book.docx-ir.json` there. The producer pins a core Git revision, so a sibling checkout is not required. The output path must be new. The adapter captures actual pagination and body-paragraph geometry without an intermediate PDF and emits canonical IR with partial/absent coverage. It does not yet capture table-cell or repeated-story regions, appearance, or complete overflow. This is a development CLI, not the finished standalone distribution. The core IR, schema, validation, summary, and future diff/evaluation tooling remain independent of Skia and dxpdf.
 
 ## Roadmap
 
 - [x] Establish the renderer-independent Rust IR, schema, validation, and summary tooling.
 - [x] Add durable OPC-qualified source IDs with `w14:paraId` support and deterministic fallbacks.
-- [ ] Integrate engine-populated IR inspection in the sibling workspace without PDF output.
+- [x] Integrate initial engine-populated body-paragraph IR inspection in the sibling workspace without PDF output.
 - [x] Add optional coverage declarations and coverage-aware CLI reporting.
 - [ ] Capture resolved run, paragraph, table, image, and shape appearance, including baselines, clips, and transforms.
 - [ ] Preserve composition hierarchy, reading order, and role provenance alongside source identities.
