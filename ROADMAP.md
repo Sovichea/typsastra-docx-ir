@@ -80,7 +80,8 @@ Do not inject bookmarks or marker text to recover identity: those techniques can
 - [ ] Return actionable errors for malformed packages, unsupported content, missing fonts, and layout failures.
 - [x] Add end-to-end tests with in-memory DOCX fixtures, source-aware split paragraphs, collection parity, and CLI assertions that no PDF is created.
 - [x] Export observed font-resolution substitutions and instrumented ignored-property reports as structured diagnostics, excluding preload-only requests and false alias substitutions.
-- [ ] Extend diagnostic coverage to remaining unsupported paths and exact source locations where available; bound auxiliary XML and engine resource use.
+- [x] Enforce aggregate element and per-part nesting limits across all package XML and relationship parts before deserialization.
+- [ ] Extend diagnostic coverage to remaining unsupported paths and exact source locations where available; supervise engine runtime and memory.
 
 Milestone 3 is in progress, not complete. The initial adapter exports body-flow paragraphs only; repeated-story and table-cell region transport remain Milestone 4 work. Full overflow is unknown (`overflow: null`), not a negative measurement.
 
